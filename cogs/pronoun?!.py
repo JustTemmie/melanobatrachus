@@ -83,7 +83,7 @@ class pronouns(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def stuff(self, interaction, phase, pronouns):
+    async def main(self, interaction, phase, pronouns):
         embed = Embed()
         embed.title = f"Please select your **{phase}** pronouns"
         thing = [
@@ -122,22 +122,28 @@ class pronouns(commands.Cog):
     async def nya(self, interaction: discord.Interaction):
         pronouns = []
 
-        pronouns = await self.stuff(interaction, "primary", pronouns)
+        # call the main function up to three times, and stop calling it if the user selects exit, any, all, or ask me
+        pronouns = await self.main(interaction, "primary", pronouns)
         if "Exit" not in pronouns and "Any" not in pronouns and "All" not in pronouns and "Ask me" not in pronouns:
-            pronouns = await self.stuff(interaction, "secondary", pronouns)
+            pronouns = await self.main(interaction, "secondary", pronouns)
         if "Exit" not in pronouns and "Any" not in pronouns and "All" not in pronouns and "Ask me" not in pronouns:
-            pronouns = await self.stuff(interaction, "tertiary", pronouns)
+            pronouns = await self.main(interaction, "tertiary", pronouns)
         
-        # remove the "exit" pronoun if present
+        # remove the exit "pronoun" if present
         if "Exit" in pronouns:
             pronouns.pop(len(pronouns)-1)
         
-        # if you just pressed exit, exit the command
+        # if you just pressed exit, exit the command completely
         if len(pronouns) == 0:
+            embed = Embed()
+            embed.title = "alright then"
+            embed.description = "exiting"
+            await interaction.edit_original_response(embed=embed, view=discord.ui.View())
             return
         
+        # tell the user what roles their final selection was
         embed = Embed()
-        embed.title = f"Your prefered pronouns"
+        embed.title = f"Editing your roles... this might take a second"
         thing = [
             "primary pronouns:",
             "secondary pronouns:",
@@ -149,6 +155,8 @@ class pronouns(commands.Cog):
 
         await interaction.edit_original_response(embed=embed, view=discord.ui.View())
 
+        
+        # figure out which roles needs to be given out to the user
         rolesToGiveOut = []
         rolesToRemove = []
 
@@ -160,24 +168,36 @@ class pronouns(commands.Cog):
                 if roleDict[j][1] == i.split("/")[0].lower():
                     rolesToGiveOut.append(roleDict[j][0])
                     break
-  
+        
+        # don't remove the roles that the user already has
         for i in rolesToGiveOut:
             for n, j in enumerate(rolesToRemove):
                 if i == j:
-                    print(f"{rolesToRemove[n]} go pop")
                     rolesToRemove.pop(n)
                     break
-    
+        
+        # remove all other existing roles
         roles = tuple(discord.utils.get(interaction.guild.roles, id=i) for i in roleIDs)
         await interaction.user.remove_roles(*roles)
 
+        # finally add all the roles
         roles = tuple(discord.utils.get(interaction.guild.roles, id=i) for i in rolesToGiveOut)
         await interaction.user.add_roles(*roles)
-        print("a")
-        await interaction.edit_original_response("your roles have been updated!")
-
+        
+        # final embed informing the user that the operation has finished
+        embed = Embed()
+        embed.title = "**Done!** your pronouns have been set to"
+        thing = [
+            "primary pronouns:",
+            "secondary pronouns:",
+            "tertiary pronouns:",
+        ]
+        # list the prefered pronouns in the embed
+        for i, pronoun in enumerate(pronouns):
+            embed.add_field(name=thing[i], value=pronoun, inline=False)
             
+        await interaction.edit_original_response(embed=embed, view=discord.ui.View())
 
-    
+
 async def setup(bot):
     await bot.add_cog(pronouns(bot))#, guilds = [discord.Object(id = 1016777760305320036)])
