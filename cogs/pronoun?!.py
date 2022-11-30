@@ -173,6 +173,8 @@ class pronouns(commands.Cog):
 
         roles = tuple(discord.utils.get(interaction.guild.roles, id=i) for i in rolesToGiveOut)
         await interaction.user.add_roles(*roles)
+        print("a")
+        await interaction.edit_original_response("your roles have been updated!")
 
             
 
