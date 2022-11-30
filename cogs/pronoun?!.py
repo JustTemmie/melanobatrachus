@@ -163,11 +163,17 @@ class pronouns(commands.Cog):
         for i in roleIDs:
             rolesToRemove.append(i)
 
+        tempPronouns = []
+        
         for i in pronouns:
-            for j in roleDict:
-                if roleDict[j][1] == i.split("/")[0].lower():
-                    rolesToGiveOut.append(roleDict[j][0])
-                    break
+            tempPronouns.append(i)
+            
+        for j in roleDict:
+            if len(tempPronouns) == 0:
+                break
+            if roleDict[j][1] == tempPronouns[0].split("/")[0].lower():
+                rolesToGiveOut.append(roleDict[j][0])
+                tempPronouns.pop(0)
         
         # don't remove the roles that the user already has
         for i in rolesToGiveOut:
