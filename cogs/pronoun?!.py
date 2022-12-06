@@ -114,6 +114,7 @@ class pronouns(commands.Cog):
         await view.wait()
         if view.value is None:
             await interaction.edit_original_response("sorry, you timed out")
+            return return
         else:
             pronouns.append(view.value)
         return pronouns
